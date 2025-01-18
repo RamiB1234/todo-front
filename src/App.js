@@ -1,27 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import TaskList from './TaskList';
 import TaskForm from './TaskForm';
+import API from './api';
 
 function App() {
-  const [tasks, setTasks] = useState([
-    { id: 1, description: 'Learn Django', completed: false },
-    { id: 2, description: 'Build a To-Do App', completed: true },
-  ]);
+  const [tasks, setTasks] = useState([]);
+
+  useEffect(() => {
+      API.get('tasks/')
+          .then((response) => setTasks(response.data))
+          .catch((error) => console.error('Error fetching tasks:', error));
+  }, []);
 
   const toggleCompleted = (id, completed) => {
-    setTasks(tasks.map(task =>
-      task.id === id ? { ...task, completed } : task
-    ));
-  };
+    API.put('tasks/toggle/', { id, completed })
+        .then(() =>
+            setTasks(tasks.map((task) =>
+                task.id === id ? { ...task, completed } : task
+            ))
+        )
+        .catch((error) => console.error('Error updating task:', error));
+};
+
 
   const addTask = (description) => {
-    const newTask = {
-        id: tasks.length + 1, // Generate a simple ID for now
-        description,
-        completed: false,
-    };
-    setTasks([...tasks, newTask]); // Add the new task to the state
+    API.post('tasks/add/', { description })
+        .then((response) => setTasks([...tasks, response.data]))
+        .catch((error) => console.error('Error adding task:', error));
 };
+
 
   return (
     <div className="container">
